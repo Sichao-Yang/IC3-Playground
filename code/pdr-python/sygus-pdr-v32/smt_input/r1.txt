@@ -1,2 +1,0 @@
-(define-fun INV ((addr (_ BitVec 4)) (base (_ BitVec 4)) (cnt (_ BitVec 4))) Bool (= cnt (_ bv1 4)))
-
