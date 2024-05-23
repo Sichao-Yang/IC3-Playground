@@ -6,7 +6,7 @@ def generate_variables(N): return [Bool(chr(ord('a') + i)) for i in range(N)]
 def prime(variables): return [Bool(var.__str__() + '\'') for var in variables]
 def print_and_write(file, string):
     file.write(string + "\n")
-    print string
+    print(string)
 
 def verify_program(title, variables, primes, init, trans, post, show_result = True, show_trans = True):
     fname = inspect.stack()[1][3]
@@ -16,16 +16,13 @@ def verify_program(title, variables, primes, init, trans, post, show_result = Tr
         print_and_write(f, "Init: " + str(init))
         f.write("Trans: " + str(trans) + "\n")
         if show_trans:
-            print "Trans:", trans
+            print("Trans:", trans)
         print_and_write(f, "Post:" + str(post))
         pdr = PDR(variables, primes, init, trans, post)
-        print
         sat, output = pdr.run()
         res_string = ("SAT\n" if sat else "UNSAT\n") + str(output)
         f.write(res_string + "\n")
-        print res_string if show_result else (("SAT\n" if sat else "UNSAT\n") + "Hidden result due to length")
-        print
-        print
+        print(res_string if show_result else (("SAT\n" if sat else "UNSAT\n") + "Hidden result due to length"))
 
 def counter_unsat():
     variables = [BitVec('x', 8)]
@@ -132,7 +129,7 @@ tests = [run_all, counter_sat, counter_unsat, shifter_sat, shifter_unsat, add_su
 if __name__ == "__main__":
     test_lookup = {test.__name__: test for test in tests}
     if len(sys.argv) != 2:
-        print "Usage: python test_pdy.py [", ", ".join([test.__name__ for test in tests]), "]"
+        print("Usage: python test_pdy.py [", ", ".join([test.__name__ for test in tests]), "]")
         exit()
 
     test_lookup[sys.argv[1]]()
