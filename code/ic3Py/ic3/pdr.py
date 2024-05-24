@@ -35,8 +35,8 @@ class tCube:
         for it, v in enumerate(self.cubeLiterals):
             if i == it:
                 res.add(True)
-                continue
-            res.add(v)
+            else:
+                res.add(v)
         return res
 
     def cube(self):
@@ -90,7 +90,7 @@ class PDR:
                     for c in frame.cubeLiterals:
                         s = Solver()
                         # if (F[i] and T and Not(c)') == unsat, it means F[i] & T => c', c can be added to F[i+1]
-                        s.add(And(frame.cube(), self.trans.cube(), Not(substitute(c, self.primeMap)))) 
+                        s.add(And(frame.cube(), self.trans.cube(), Not(substitute(c, self.primeMap))))
                         if s.check() == unsat:
                             self.frames[index + 1].add(c)
                     if self.checkForInduction(frame):
@@ -103,7 +103,7 @@ class PDR:
         print("check for Induction now...")
         s = Solver()
         # if unsat, it means F[i] & T => F[i]' is valid
-        s.add(And(self.trans.cube(),frame.cube(),Not(substitute(frame.cube(), self.primeMap))))  
+        s.add(And(self.trans.cube(), frame.cube(), Not(substitute(frame.cube(), self.primeMap))))
         if s.check() == unsat:
             return True
         return False
@@ -132,30 +132,22 @@ class PDR:
             if self.down(q1):
                 q = q1
         return q
-        # i = 0
-        # while True:
-        #     print(i)
-        #     if i < len(q.cubeLiterals) - 1:
-        #         i += 1
-        #     else:
-        #         break
-        #     q1 = q.delete(i)
-        #     if self.down(q1):
-        #         q = q1
-        # return q
 
     def down(self, q: tCube):
         while True:
             s = Solver()
+            # check base case, q is candidate for generalized bad states, if I&q == sat, initial state contains q, which is not correct
             s.push()
-            s.add(And(self.frames[0].cube(), Not(q.cube())))
-            if unsat == s.check():
+            s.add(And(self.frames[0].cube(), q.cube()))
+            if s.check() == sat:
                 return False
             s.pop()
+            # check consecution, F[i-1] & T => !q',
             s.push()
             s.add(
-                And(self.frames[q.t].cube(), Not(q.cube()), self.trans.cube(), substitute(q.cube(), self.primeMap))
-            )  # Fi and not(q) and T and q'
+                # And(self.frames[q.t].cube(), Not(q.cube()), self.trans.cube(), substitute(q.cube(), self.primeMap))
+                And(self.frames[q.t - 1].cube(), substitute(q.cube(), self.primeMap))
+            )
             if unsat == s.check():
                 return True
             # m = s.model()
