@@ -11,19 +11,13 @@ Prototype some ideas related to  IC3 algorithm. Also make a comparison environme
 
 - [sambayless](https://github.com/sambayless)/**[simpleIC3](https://github.com/sambayless/simpleIC3)**
 
-- [ic3_demo.py](https://www.zhihu.com/question/59299573/answer/163801149)
-
 - [arbrad](https://github.com/arbrad)/**[IC3ref](https://github.com/arbrad/IC3ref)**
 
-- [zhanghongce](https://github.com/zhanghongce)/**[pdr-prototype-tests](https://github.com/zhanghongce/pdr-prototype-tests)**
-
-- [songhobby](https://github.com/songhobby)/**[RL2MC](https://github.com/songhobby/RL2MC)**
-
-
-- [pysmt](https://github.com/pysmt)/**[pysmt](https://github.com/pysmt/pysmt)** (Includes come MC example)     
+- [zhanghongce](https://github.com/zhanghongce)/**[pdr-prototype-tests](https://github.com/zhanghongce/pdr-prototype-tests)** this one contains a lot of pdr python implementations and variations, but is not well organized.
 
 - [Z3Prover](https://github.com/Z3Prover) /**[z3](https://github.com/Z3Prover/z3)** (Includes mini_ic3.py)
 
+- [pysmt](https://github.com/pysmt)/**[pysmt](https://github.com/pysmt/pysmt)** (Includes come MC example)     
 
 ## Some Benchmark I Referred to
 

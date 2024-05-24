@@ -71,6 +71,7 @@ class PDR:
         while True:
             c = self.getBadCube()
             if c is not None:
+                # Recursive blocking stage
                 # print("get bad cube!")
                 trace = self.recBlockCube(c)
                 if trace is not None:
@@ -84,18 +85,16 @@ class PDR:
             else:
                 print("Adding frame " + str(len(self.frames)) + "...")
                 self.frames.append(tCube(len(self.frames)))
-                for index, fi in enumerate(self.frames):
-                    if index == len(self.frames) - 1:
-                        break
-                    for c in fi.cubeLiterals:
+                # Propagation stage
+                for index, frame in enumerate(self.frames[:-1]):
+                    for c in frame.cubeLiterals:
                         s = Solver()
-                        s.add(fi.cube())
-                        s.add(self.trans.cube())
-                        s.add(Not(substitute(c, self.primeMap)))  # F[i] and T and Not(c)'
+                        # if (F[i] and T and Not(c)') == unsat, it means F[i] & T => c', c can be added to F[i+1]
+                        s.add(And(frame.cube(), self.trans.cube(), Not(substitute(c, self.primeMap)))) 
                         if s.check() == unsat:
                             self.frames[index + 1].add(c)
-                    if self.checkForInduction(fi):
-                        print("Fond inductive invariant:\n" + str(fi.cube()))
+                    if self.checkForInduction(frame):
+                        print("Fond inductive invariant:\n" + str(frame.cube()))
                         return True
                 print("New Frame " + str(len(self.frames) - 1) + ": ")
                 print(self.frames[-1].cube())
@@ -103,9 +102,8 @@ class PDR:
     def checkForInduction(self, frame):
         print("check for Induction now...")
         s = Solver()
-        s.add(self.trans.cube())
-        s.add(frame.cube())
-        s.add(Not(substitute(frame.cube(), self.primeMap)))  # T and F[i] and Not(F[i])'
+        # if unsat, it means F[i] & T => F[i]' is valid
+        s.add(And(self.trans.cube(),frame.cube(),Not(substitute(frame.cube(), self.primeMap))))  
         if s.check() == unsat:
             return True
         return False
@@ -128,6 +126,7 @@ class PDR:
         return None
 
     def MIC(self, q: tCube):
+        # Generalization
         for i in range(len(q.cubeLiterals)):
             q1 = q.delete(i)
             if self.down(q1):

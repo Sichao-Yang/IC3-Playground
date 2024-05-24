@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["abp4.aag"]
+            "args": ["ic3/aag/test_40.aag"]
         }
     ]
 }
