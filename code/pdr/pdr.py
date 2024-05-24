@@ -103,7 +103,7 @@ class PDR(object):
                 return check_frame
         return None
 
-    # Attemps to block a cube recursively
+    # block a cube recursively
     # Returns None if the cube was able to be blocked
     # Returns a stack trace if the cube cannot be blocked
     def rec_block_cube(self, cube):
