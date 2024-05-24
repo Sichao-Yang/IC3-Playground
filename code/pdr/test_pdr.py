@@ -18,7 +18,7 @@ def print_and_write(file, string):
 
 def verify_program(expected, title, variables, primes, init, trans, post, show_result=True, show_trans=True):
     fname = inspect.stack()[1][3]
-    with open(fname + ".out", "w") as f:
+    with open("tmp.out", "w") as f:
         print_and_write(f, title)
         print_and_write(f, "---------------------------------------")
         print_and_write(f, "Init: " + str(init))
@@ -35,6 +35,281 @@ def verify_program(expected, title, variables, primes, init, trans, post, show_r
         res_string = ("SAT\n" if sat else "UNSAT\n") + str(output)
         f.write(res_string + "\n")
         print(res_string if show_result else (("SAT\n" if sat else "UNSAT\n") + "Hidden result due to length"))
+
+
+def three_at_a_time():
+    """
+    :return: variables -> Boolean Variables, primes -> The Post Condition Variable, init -> The initial State,
+    trans -> Transition Function, post -> The Safety Property
+    """
+    size = 8
+    variables = [Bool(str(i)) for i in range(size)]
+    primes = [Bool(str(i) + "'") for i in variables]
+
+    def triple(i):
+        return And(
+            *[primes[j] == variables[j] for j in range(size) if (j != i and j != i - 1 and j != i - 2)]
+            + [
+                Not(primes[i] == variables[i]),
+                Not(primes[i - 1] == variables[i - 1]),
+                Not(primes[i - 2] == variables[i - 2]),
+            ]
+        )
+
+    init = And(*[variables[i] for i in range(size - 1)] + [(variables[-1])])
+    print("init:", init)
+    trans = Or(*[triple(i) for i in range(size)])
+    print("trans:", trans)
+    post = Or(*variables)
+    print("post:", post)
+
+    verify_program(
+        True,
+        """SAFE
+Similar to OneAtATime
+A boolean bit vector is initialized with size 8
+to TTTTTTTT. One bit can be flipped per frame but
+now the two neighbors to it's left must also flip for a total of three.
+The post condition is that at least one bool is True
+which cannot be violated with a bit vector of size 8 and three bits flipped per frame""",
+        variables,
+        primes,
+        init,
+        trans,
+        post,
+    )
+
+
+def three_at_a_time_odd():
+    size = 9
+    variables = [Bool(str(i)) for i in range(size)]
+    primes = [Bool(str(i) + "'") for i in variables]
+
+    def triple(i):
+        return And(
+            *[primes[j] == variables[j] for j in range(size) if (j != i and j != i - 1 and j != i - 2)]
+            + [
+                Not(primes[i] == variables[i]),
+                Not(primes[i - 1] == variables[i - 1]),
+                Not(primes[i - 2] == variables[i - 2]),
+            ]
+        )
+
+    init = And(*[variables[i] for i in range(size - 1)] + [(variables[-1])])
+    trans = Or(*[triple(i) for i in range(size)])
+    post = Or(*variables)
+
+    verify_program(
+        False,
+        """UNSAFE
+Three at a time but with an odd length bit vector
+The post condition can now be violated flipping three bits at a time""",
+        variables,
+        primes,
+        init,
+        trans,
+        post,
+    )
+
+
+def boolean_shifter():
+    len = 10
+    variables = [Bool(str(i)) for i in range(len)]
+    primes = [Bool(str(i) + "'") for i in variables]
+
+    # initialize to something like [T T T T T T T T F]
+    init = And(*[variables[i] for i in range(len - 1)] + [Not(variables[-1])])
+    trans = And(*[primes[i] == And(variables[i - 1], variables[i - 2]) for i in range(len)])
+    post = Or(*variables)
+
+    verify_program(
+        False,
+        """UNSAFE
+Initialize a boolean bitfield to [TTTTTTTTTF]
+Each iteration, each boolean takes the AND of the two bits to its left
+(rolling over at the left back to the right)
+(Frame 1 will look like [FFTTTTTTTT])
+The post condition is simply that at least one boolean be true,
+which can take quite a while to fail depending on the width of the bitfield""",
+        variables,
+        primes,
+        init,
+        trans,
+        post,
+    )
+
+
+def boolean_incrementer():
+    len = 8
+    variables = [Bool(str(i)) for i in range(len)]
+    primes = [Bool(str(i) + "'") for i in variables]
+    init = And(*[Not(variables[i]) for i in range(len - 1)] + [variables[-1]])
+    print("init is:", init)
+
+    def carryout(pos):
+        if pos == len / 2:
+            return False
+        else:
+            return Or(
+                And(Xor(variables[pos], variables[pos + len / 2]), carryout(pos + 1)),
+                And(variables[pos], variables[pos + len / 2]),
+            )
+
+    trans = And(
+        *[primes[i] == Xor(Xor(variables[i], variables[i + len / 2]), carryout(i + 1)) for i in range(len / 2)]
+        + [primes[i + len / 2] == variables[i + len / 2] for i in range(len / 2)]
+    )
+    print("trans is:", trans)
+    post = Not(And(*[variables[i] for i in range(len / 2)]))
+    print("post is:", post)
+    verify_program(
+        False,
+        """UNSAFE
+Initialize a boolean bitfield [AAAAA BBBBB]
+Each iteration, add the value of BBBBB to AAAAA
+incrementing it
+In this example, BBBBB is 00001 and the postcondition is that
+AAAAA is not 11111, which is unsafe after 16 frames""",
+        variables,
+        primes,
+        init,
+        trans,
+        post,
+    )
+
+
+def incrementer_overflow():
+    size = 8
+    overflow = Bool("Overflow")
+    variables = [Bool(str(i)) for i in range(size)] + [overflow]
+    primes = [Bool(str(i) + "'") for i in variables]
+    overflowprime = primes[-1]
+    init = And(*[Not(variables[i]) for i in range(size - 1)] + [variables[size - 1], overflow == False])
+
+    def carryout(pos):
+        if pos == size / 2:
+            return False
+        else:
+            return Or(
+                And(Xor(variables[pos], variables[pos + size / 2]), carryout(pos + 1)),
+                And(variables[pos], variables[pos + size / 2]),
+            )
+
+    trans = If(
+        And(*[variables[i] for i in range(size / 2)]),
+        And(*[variables[i] == primes[i] for i in range(len(variables))]),
+        And(
+            *[primes[i] == Xor(Xor(variables[i], variables[i + size / 2]), carryout(i + 1)) for i in range(size / 2)]
+            + [primes[i + size / 2] == variables[i + size / 2] for i in range(size / 2)]
+            + [overflowprime == carryout(0)]
+        ),
+    )
+    post = Not(overflow)
+    verify_program(
+        True,
+        """SAFE
+Add overflow protection to the previous boolean incrementer
+When the incrementer becomes full, it will not add any more to it
+There is an overflow bit that gets set if there is any carryover from the MSB
+so the postcondition is Not(overflow)""",
+        variables,
+        primes,
+        init,
+        trans,
+        post,
+    )
+
+
+def even_incrementer():
+    len = 6
+    variables = [Bool(str(i)) for i in range(len)]
+    primes = [Bool(str(i) + "'") for i in variables]
+    init = And(*[Not(variables[i]) for i in range(len - 2)] + [variables[-2], Not(variables[-1])])
+
+    def carryout(pos):
+        if pos == len / 2:
+            return False
+        else:
+            return Or(
+                And(Xor(variables[pos], variables[pos + len / 2]), carryout(pos + 1)),
+                And(variables[pos], variables[pos + len / 2]),
+            )
+
+    trans = And(
+        *[primes[i] == Xor(Xor(variables[i], variables[i + len / 2]), carryout(i + 1)) for i in range(len / 2)]
+        + [primes[i + len / 2] == variables[i + len / 2] for i in range(len / 2)]
+    )
+    post = Not(variables[len / 2 - 1])
+    verify_program(
+        True,
+        """SAFE
+Using the same boolean incrementer from before
+In this example, BBB is 010 and the postcondition is that
+AAA is even, which is safe""",
+        variables,
+        primes,
+        init,
+        trans,
+        post,
+    )
+
+
+def swapper():
+    x = Bool("x")
+    y = Bool("y")
+    z = Bool("z")
+    xp = Bool("x'")
+    yp = Bool("y'")
+    zp = Bool("z'")
+    variables = [x, y, z]
+    primes = [xp, yp, zp]
+
+    init = And(x, Not(y), Not(z))
+    trans = And(xp == y, zp == x, yp == z)
+    post = Or(x, y, z)
+    verify_program(
+        True,
+        """SAFE
+This test is a simple program that rotates the variables of three booleans
+The post condition is that at least one of them must be true
+which is inductive because one is initialized to true and never negated, only swapped""",
+        variables,
+        primes,
+        init,
+        trans,
+        post,
+    )
+
+
+def one_at_a_time():
+    size = 8
+    variables = [Bool(str(i)) for i in range(size)]
+    primes = [Bool(str(i) + "'") for i in variables]
+
+    def exclusive(i):  # only one variable will be different
+        return And(*[primes[j] == variables[j] for j in range(size) if j != i] + [Not(primes[i] == variables[i])])
+
+    init = And(*[variables[i] for i in range(size - 1)] + [(variables[-1])])
+    # init = And(*[variables[i] for i in range(size)])
+    print("init:", init)
+    trans = Or(*[exclusive(i) for i in range(size)])
+    print("trans:", trans)  # this measns one of the state variable will be different after transition
+    post = Or(*variables)
+    print("post:", post)
+
+    verify_program(
+        False,
+        """UNSAFE
+A boolean bit vector is initialized with size 8
+to TTTTTTTT. One bit can be flipped per frame. 
+The post condition is that at least one bool is True
+which can be violated in 8 frames""",
+        variables,
+        primes,
+        init,
+        trans,
+        post,
+    )
 
 
 def counter_unsat():
@@ -243,11 +518,26 @@ tests = [
     add_sub_unsat,
     lights_out_sat,
     lights_out_unsat,
+    swapper,
+    one_at_a_time,
+    three_at_a_time,
+    three_at_a_time_odd,
+    ### large_ones:
+    # boolean_shifter,
+    # boolean_incrementer,
+    # incrementer_overflow,
+    # even_incrementer,
 ]
 if __name__ == "__main__":
+    import time
+
+    s = time.time()
+
     test_lookup = {test.__name__: test for test in tests}
     if len(sys.argv) != 2:
         print("Usage: python test_pdy.py [{}]".format(", ".join([test.__name__ for test in tests])))
         exit()
 
     test_lookup[sys.argv[1]]()
+
+    print("test time: {}".format(time.time() - s))

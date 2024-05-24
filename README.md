@@ -5,8 +5,6 @@ Prototype some ideas related to  IC3 algorithm. Also make a comparison environme
 
 - [alex-sherman](https://github.com/alex-sherman)/**[pdr](https://github.com/alex-sherman/pdr)**
 
-- [pddenhar](https://github.com/pddenhar)/**[Z3-IC3-PDR](https://github.com/pddenhar/Z3-IC3-PDR)**
-
 - [mufanx](https://github.com/mufanx)/**[ic3Py](https://github.com/mufanx/ic3Py)** (Real implementation of python version ic3)
 
 - [rohitdureja](https://github.com/rohitdureja)/**[SimplePDR](https://github.com/rohitdureja/SimplePDR)**

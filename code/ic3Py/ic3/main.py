@@ -3,11 +3,17 @@ import os
 from datetime import datetime
 from multiprocessing import Process
 
+import sys
+from os import path as osp
+
+root = osp.abspath(osp.join(__file__, "../../"))
+sys.path.append(root)
+
 import ic3.model
 import ic3.pdr
 
 
-test_file_path = "./aag"
+test_file_path = osp.join(root, "ic3/aag")
 
 
 def run_with_limited_time(func, time):
@@ -20,12 +26,12 @@ def run_with_limited_time(func, time):
     return True
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     help_info = "Usage: python main.py <file-name>.aag"
     parser = argparse.ArgumentParser(description="Run tests examples on the PDR algorithm")
-    parser.add_argument('fileName', type=str, help='The name of the test to run', default=None, nargs='?')
-    parser.add_argument('-m', type=int, help='the time limitation of one test to run', default=None)
-    parser.add_argument('-c', help='switch to counting time', action='store_true')
+    parser.add_argument("fileName", type=str, help="The name of the test to run", default=None, nargs="?")
+    parser.add_argument("-m", type=int, help="the time limitation of one test to run", default=None)
+    parser.add_argument("-c", help="switch to counting time", action="store_true")
     args = parser.parse_args()
     if args.fileName is not None:
         file = args.fileName
@@ -37,7 +43,6 @@ if __name__ == '__main__':
         endTime = datetime.now()
         if args.c:
             print("TIME CONSUMING: " + str((endTime - startTime).seconds) + "seconds")
-
     else:
         print("================ Test the ./aag directory ========")
         for root, dirs, files in os.walk(test_file_path):

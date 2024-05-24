@@ -2,7 +2,6 @@ import re
 from z3 import *
 
 from ic3.pdr import tCube
-from ic3.solver import TCube
 
 
 class Header:
@@ -23,9 +22,7 @@ class Latch:
         self.init = _init
 
     def __repr__(self):
-        return str(self.var) + ", " \
-               + str(self.next) + ", " \
-               + str(self.init)
+        return str(self.var) + ", " + str(self.next) + ", " + str(self.init)
 
 
 class AND:
@@ -35,9 +32,7 @@ class AND:
         self.rhs1 = _rhs1
 
     def __repr__(self):
-        return str(self.lhs) + ", " \
-               + str(self.rhs0) + ", " \
-               + str(self.rhs1)
+        return str(self.lhs) + ", " + str(self.rhs0) + ", " + str(self.rhs1)
 
 
 def read_in(fileName: str):
@@ -55,7 +50,7 @@ def read_in(fileName: str):
     AND_PATTERN = re.compile("(\d+) (\d+) (\d+)\n")
     ANNOTATION_PATTERN = re.compile("\S+ (\S+)\n")
 
-    with open(fileName, 'r') as f:
+    with open(fileName, "r") as f:
         head_line = f.readline()
         cont = re.match(HEADER_PATTERN, head_line)
         if cont is None:
@@ -69,7 +64,7 @@ def read_in(fileName: str):
             int(cont.group(4)),
             int(cont.group(5)),
             int(cont.group(6)) if cont.group(6) is not None else 0,
-            int(cont.group(7)) if cont.group(7) is not None else 0
+            int(cont.group(7)) if cont.group(7) is not None else 0,
         )
 
         input_num = header.inputs
@@ -174,7 +169,7 @@ class Model:
         pvs = dict()
         self.primed_vars = list()
         for it in l:
-            pvs[it.var] = Bool(str(vs[it.var]) + '\'')
+            pvs[it.var] = Bool(str(vs[it.var]) + "'")
             self.primed_vars.append(pvs[it.var])
 
         # and gate node => And(and1, and2)
@@ -338,5 +333,5 @@ class Model:
         return self.inputs, self.vars, self.primed_vars, self.init, self.trans, self.post
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass

@@ -10,8 +10,8 @@ class tCube:
 
     # 解析 sat 求解出的 model, 并将其加入到当前 tCube 中
     def addModel(self, lMap, model):
-        no_primes = [l for l in model if str(l)[-1] != '\'']
-        no_input = [l for l in no_primes if str(l)[0] != 'i']
+        no_primes = [l for l in model if str(l)[-1] != "'"]
+        no_input = [l for l in no_primes if str(l)[0] != "i"]
         self.add(simplify(And([lMap[str(l)] == model[l] for l in no_input])))
 
     # 扩增 CNF 式
@@ -23,7 +23,7 @@ class tCube:
     def add(self, m):
         g = Goal()
         g.add(m)
-        t = Tactic('tseitin-cnf')  # 转化得到该公式的 CNF 范式
+        t = Tactic("tseitin-cnf")  # 转化得到该公式的 CNF 范式
         for c in t(g)[0]:
             self.cubeLiterals.append(c)
         if len(t(g)[0]) == 0:
@@ -44,33 +44,6 @@ class tCube:
 
     def __repr__(self):
         return str(self.t) + ": " + str(sorted(self.cubeLiterals, key=str))
-
-
-# class tClause:
-#     def __init__(self, t=0):
-#         self.t = t
-#         self.clauseLiterals = []
-#
-#     def defFromNotCube(self, c: tCube):
-#         for cube in c.cubeLiterals:
-#             self.clauseLiterals.append(Not(cube))
-#
-#     def clause(self):
-#         return simplify(Or(self.clauseLiterals))
-#
-#     def add(self, m):
-#         self.clauseLiterals.append(m)
-#
-#     def delete(self, i: int):
-#         res = tClause(self.t)
-#         for it in range(len(self.clauseLiterals)):
-#             if it == i:
-#                 continue
-#             res.add(self.clauseLiterals[it])
-#         return res
-#
-#     def __repr__(self):
-#         return str(self.t) + ": " + str(sorted(self.clauseLiterals, key=str))
 
 
 class PDR:
@@ -181,37 +154,15 @@ class PDR:
                 return False
             s.pop()
             s.push()
-            s.add(And(self.frames[q.t].cube(), Not(q.cube()), self.trans.cube(),
-                      substitute(q.cube(), self.primeMap)))  # Fi and not(q) and T and q'
+            s.add(
+                And(self.frames[q.t].cube(), Not(q.cube()), self.trans.cube(), substitute(q.cube(), self.primeMap))
+            )  # Fi and not(q) and T and q'
             if unsat == s.check():
                 return True
             # m = s.model()
             # q.addModel(self.lMap, m)
             # s.pop()
             return False
-
-    # def tcgMIC(self, q: tCube, d: int):
-    #     for i in range(len(q.cubeLiterals)):
-    #         q1 = q.delete(i)
-    #         if self.ctgDown(q1, d):
-    #             q = q1
-    #     return q
-    #
-    # def ctgDown(self, q: tCube, d: int):
-    #     ctgs = 0
-    #     while True:
-    #         s = Solver()
-    #         s.push()
-    #         s.add(And(self.R[0].cube(), Not(q.cube())))
-    #         if unsat == s.check():
-    #             return False
-    #         s.pop()
-    #         s.push()
-    #         s.add(And(self.R[q.t].cube(), Not(q.cube()), self.trans.cube(),
-    #                   substitute(q.cube(), self.primeMap)))  # Fi and not(q) and T and q'
-    #         if unsat == s.check():
-    #             return True
-    #         m = s.model()
 
     # tcube is bad state
     def solveRelative(self, tcube):
@@ -243,5 +194,5 @@ class PDR:
             return None
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     pass
